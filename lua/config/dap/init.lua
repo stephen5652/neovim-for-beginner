@@ -43,7 +43,7 @@ local function configure_exts()
     icons = { expanded = "", collapsed = "", circular = "" },
     mappings = {
       -- Use a table to apply multiple mappings
-      expand = { "<CR>", "<2-LeftMouse>" },
+      e= { "<CR>", "<2-LeftMouse>" },
       open = "o",
       remove = "d",
       edit = "e",

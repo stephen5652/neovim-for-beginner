@@ -1,19 +1,11 @@
 #!/usr/bin/env bash
 
-INSTALL_FOLDER="${HOME}/.local/share/nvim/java_debug"
-home_dir=${HOME}
+CURRENT_DIR=$(
+	cd $(dirname $0)
+	pwd
+)
 
-
-
-# Install vscode-java-test
-rm -rf "$INSTALL_FOLDER/vscode-java-test"
-git clone https://github.com/microsoft/vscode-java-test.git "$INSTALL_FOLDER/vscode-java-test"
-cd "$INSTALL_FOLDER/vscode-java-test" && npm install && npm run build-plugin
-
-
-
-
-
+source ${CURRENT_DIR}/para.sh
 
 url_20=https://download.oracle.com/java/20/latest/jdk-20_macos-aarch64_bin.tar.gz
 

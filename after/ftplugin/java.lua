@@ -4,15 +4,26 @@ if not jdtls_ok then
   return
 end
 
+local VIM_PLUGINS_PACKAGE_PATH = vim.fn.stdpath "data"
 -- Installation location of jdtls by nvim-lsp-installer
-local JDTLS_LOCATION = vim.fn.stdpath "data" .. "/lsp_servers/jdtls"
+local home = os.getenv "HOME"
+local java_home = home .. "/jdk_17/Contents/Home"
+local JDTLS_LOCATION = vim.fn.stdpath "data" .. "/mason/packages/jdtls"
+local JAVA_DEBUG_TOOLS_DIR = vim.fn.stdpath "data" .. "/jdtls"
+
+local java_jdtls_file = vim.fn.glob(JDTLS_LOCATION .. "/plugins/org.eclipse.equinox.launcher_*.jar")
+local java_debug_file = vim.fn.glob(
+  JAVA_DEBUG_TOOLS_DIR .. "/java-debug_17/com.microsoft.java.debug.plugin/target/com.microsoft.java.debug.plugin-*.jar"
+)
+local java_lombok_file = JAVA_DEBUG_TOOLS_DIR .. "/lombok.jar"
+
+print("java_jdtls_file:" .. java_jdtls_file)
+print("java_debug_file:" .. java_debug_file)
+print("java_lombok_file:" .. java_lombok_file)
 
 -- Data directory - change it to your liking
 local HOME = os.getenv "HOME"
 local WORKSPACE_PATH = HOME .. "/workspace/java/"
-
--- Debugger installation location
-local DEBUGGER_LOCATION = HOME .. "/.local/share/nvim"
 
 -- Only for Linux and Mac
 local SYSTEM = "linux"
@@ -34,15 +45,20 @@ extendedClientCapabilities.resolveAdditionalTextEditsSupport = true
 
 -- Debugging
 local bundles = {
-  vim.fn.glob(
-    DEBUGGER_LOCATION .. "/java-debug/com.microsoft.java.debug.plugin/target/com.microsoft.java.debug.plugin-*.jar"
-  ),
+  java_debug_file,
 }
-vim.list_extend(bundles, vim.split(vim.fn.glob(DEBUGGER_LOCATION .. "/vscode-java-test/server/*.jar"), "\n"))
+
+-- vim.list_extend(bundles, vim.split(vim.fn.glob(DEBUGGER_LOCATION .. "/vscode-java-test/server/*.jar"), "\n"))
+
+local function on_attach_jdtls_func(client, bufnr)
+  print "jdtls on_attach_jdtls_func running"
+  vim.notify("jdtls on_attach_jdtls_func running:" .. client.name)
+  require("config.lsp").on_attach(client, bufnr)
+end
 
 local config = {
   cmd = {
-    "java",
+    java_home .. "/bin/java",
     "-Declipse.application=org.eclipse.jdt.ls.core.id1",
     "-Dosgi.bundles.defaultStartLevel=4",
     "-Declipse.product=org.eclipse.jdt.ls.core.product",
@@ -54,15 +70,19 @@ local config = {
     "java.base/java.util=ALL-UNNAMED",
     "--add-opens",
     "java.base/java.lang=ALL-UNNAMED",
+
+    -- lombok
+    "-javaagent:" .. java_lombok_file,
+
     "-jar",
-    vim.fn.glob(JDTLS_LOCATION .. "/plugins/org.eclipse.equinox.launcher_*.jar"),
+    java_jdtls_file,
     "-configuration",
     JDTLS_LOCATION .. "/config_" .. SYSTEM,
     "-data",
     workspace_dir,
   },
 
-  on_attach = require("config.lsp").on_attach,
+  on_attach = on_attach_jdtls_func,
   capabilities = require("config.lsp").capabilities,
   root_dir = root_dir,
 
@@ -89,13 +109,13 @@ local config = {
       references = {
         includeDecompiledSources = true,
       },
-      format = {
-        enabled = true,
-        settings = {
-          url = vim.fn.stdpath "config" .. "/lang-servers/intellij-java-google-style.xml",
-          profile = "GoogleStyle",
-        },
-      },
+      -- format = {
+      --   enabled = true,
+      --   settings = {
+      --     url = vim.fn.stdpath "config" .. "/lang-servers/intellij-java-google-style.xml",
+      --     profile = "GoogleStyle",
+      --   },
+      -- },
     },
     signatureHelp = { enabled = true },
     completion = {

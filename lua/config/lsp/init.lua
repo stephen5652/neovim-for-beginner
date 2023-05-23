@@ -177,7 +177,10 @@ function M.on_attach(client, bufnr)
   end
 
   -- Configure for jdtls
-  if client.name == "jdt.ls" then
+  if client.name == "jdtls" then
+    vim.notify("lsp analysis lsp client:" .. client.name)
+    print "jdtls start setup "
+    vim.notify "jdtls on attach "
     require("jdtls").setup_dap { hotcodereplace = "auto" }
     require("jdtls.dap").setup_dap_main_class_configs()
     vim.lsp.codelens.refresh()
